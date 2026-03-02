@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ProductCategory {
+  TOPS
+  OUTER
+  BOTTOMS
+  OTHER
+}
+
+enum ProductCondition {
+  NEW
+  USED
+}
+
+enum ProductSourceType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum OrderStatus {
+  CREATED
+  AWAITING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  CANCELED
+  FAILED
+}
+
+enum PaymentProvider {
+  YOOKASSA
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  phone        String?
+  role         Role     @default(USER)
+  addresses    Address[]
+  orders       Order[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  label      String?
+  country    String   @default("Россия")
+  city       String
+  street     String
+  house      String
+  apartment  String?
+  postalCode String?
+  comment    String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Product {
+  id          String            @id @default(cuid())
+  name        String
+  brand       String
+  description String
+  priceRub    Int
+  category    ProductCategory
+  sizes       String[]
+  condition   ProductCondition
+  sourceType  ProductSourceType
+  sourceName  String
+  sourceUrl   String?
+  images      String[]
+  isActive    Boolean           @default(true)
+  orderItems  OrderItem[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model Order {
+  id                String          @id @default(cuid())
+  userId            String
+  status            OrderStatus     @default(CREATED)
+  subtotalRub       Int
+  shippingRub       Int             @default(0)
+  totalRub          Int
+  paymentStatus     PaymentStatus   @default(PENDING)
+  paymentProvider   PaymentProvider @default(YOOKASSA)
+  yookassaPaymentId String?
+  items             OrderItem[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  productId    String?
+  nameSnapshot String
+  priceRub     Int
+  qty          Int
+  size         String?
+  brand        String?
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}

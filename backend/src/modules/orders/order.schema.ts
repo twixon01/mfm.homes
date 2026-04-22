@@ -8,6 +8,7 @@ export const orderItemInputSchema = z.object({
 
 export const createOrderSchema = z.object({
   items: z.array(orderItemInputSchema).min(1),
+  addressId: z.string().min(1),
 });
 
 export const orderParamsSchema = z.object({

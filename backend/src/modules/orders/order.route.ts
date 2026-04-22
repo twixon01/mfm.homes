@@ -14,29 +14,38 @@ type YooKassaPaymentResponse = {
   };
 };
 
-const SHIPPING_RUB = 4000;
-
 const orderRoutes: FastifyPluginAsync = async (app) => {
   app.post("/orders", { preHandler: requireAuth }, async (request, reply) => {
-    const { items } = createOrderSchema.parse(request.body);
+    const { items, addressId } = createOrderSchema.parse(request.body);
 
     const productIds = Array.from(new Set(items.map((item) => item.productId)));
-    const products = await app.prisma.product.findMany({
-      where: {
-        id: { in: productIds },
-        isActive: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        brand: true,
-        priceRub: true,
-        images: true,
-      },
-    });
+    const [products, address] = await Promise.all([
+      app.prisma.product.findMany({
+        where: {
+          id: { in: productIds },
+          isActive: true,
+        },
+        select: {
+          id: true,
+          name: true,
+          brand: true,
+          priceRub: true,
+          images: true,
+        },
+      }),
+      app.prisma.address.findFirst({
+        where: {
+          id: addressId,
+          userId: request.user.sub,
+        },
+      }),
+    ]);
 
     if (products.length !== productIds.length) {
       throw app.httpErrors.badRequest("Некоторые товары не найдены или недоступны");
+    }
+    if (!address) {
+      throw app.httpErrors.badRequest("Адрес доставки не найден");
     }
 
     const productMap = new Map(products.map((product) => [product.id, product]));
@@ -57,8 +66,8 @@ const orderRoutes: FastifyPluginAsync = async (app) => {
     });
 
     const subtotalRub = orderItems.reduce((sum, item) => sum + item.priceRub * item.qty, 0);
-    const shippingRub = subtotalRub > 0 ? SHIPPING_RUB : 0;
-    const totalRub = subtotalRub + shippingRub;
+    const shippingRub = 0;
+    const totalRub = subtotalRub;
 
     const order = await app.prisma.order.create({
       data: {
@@ -68,6 +77,14 @@ const orderRoutes: FastifyPluginAsync = async (app) => {
         subtotalRub,
         shippingRub,
         totalRub,
+        deliveryLabel: address.label,
+        deliveryCountry: address.country,
+        deliveryCity: address.city,
+        deliveryStreet: address.street,
+        deliveryHouse: address.house,
+        deliveryApartment: address.apartment,
+        deliveryPostalCode: address.postalCode,
+        deliveryComment: address.comment,
         items: {
           create: orderItems,
         },

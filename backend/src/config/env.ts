@@ -9,6 +9,11 @@ const envSchema = z.object({
   YOOKASSA_SHOP_ID: z.string().trim().optional(),
   YOOKASSA_SECRET_KEY: z.string().trim().optional(),
   YOOKASSA_RETURN_URL: z.string().url().optional(),
+  EBAY_APP_ID: z.string().trim().optional(),
+  EBAY_CLIENT_SECRET: z.string().trim().optional(),
+  EBAY_MARKETPLACE: z.string().trim().default("EBAY_US"),
+  UPLOADS_DIR: z.string().trim().optional(),
+  UPLOADS_PUBLIC_PREFIX: z.string().trim().default("/uploads"),
 });
 
 export const env = envSchema.parse(process.env);

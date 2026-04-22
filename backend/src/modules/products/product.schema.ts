@@ -7,6 +7,11 @@ export const productSourceTypeSchema = z.enum(["INTERNAL", "EXTERNAL"]);
 export const listProductsQuerySchema = z.object({
   q: z.string().trim().optional(),
   category: productCategorySchema.optional(),
+  brands: z.string().trim().optional(),
+  priceFrom: z.coerce.number().int().nonnegative().optional(),
+  priceTo: z.coerce.number().int().nonnegative().optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(30),
   includeInactive: z.coerce.boolean().optional().default(false),
 });
 

@@ -21,8 +21,8 @@ const devRoutes: FastifyPluginAsync = async (app) => {
   </style>
 </head>
 <body>
-  <h1>Временная тестовая страница auth/profile</h1>
-  <p class="muted">Endpoint: <code>/dev/test-auth</code>. После теста удалим.</p>
+  <h1>Тестовая страница auth/profile</h1>
+  <p class="muted">Endpoint: <code>/dev/test-auth</code>.</p>
 
   <div class="card">
     <h3>1) Регистрация / Логин</h3>

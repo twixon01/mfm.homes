@@ -1,5 +1,6 @@
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
+import multipart from "@fastify/multipart";
 import sensible from "@fastify/sensible";
 import Fastify from "fastify";
 import { ZodError } from "zod";
@@ -13,6 +14,7 @@ import orderRoutes from "./modules/orders/order.route.js";
 import paymentRoutes from "./modules/payments/payment.route.js";
 import productRoutes from "./modules/products/product.route.js";
 import userRoutes from "./modules/users/user.route.js";
+import wishlistRoutes from "./modules/wishlist/wishlist.route.js";
 
 export function buildApp() {
   const app = Fastify({ logger: false });
@@ -24,6 +26,12 @@ export function buildApp() {
     credentials: true,
   });
   app.register(sensible);
+  app.register(multipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024,
+      files: 1,
+    },
+  });
   app.register(jwt, {
     secret: env.JWT_SECRET,
   });
@@ -34,6 +42,7 @@ export function buildApp() {
   app.register(productRoutes, { prefix: "/api" });
   app.register(orderRoutes, { prefix: "/api" });
   app.register(paymentRoutes, { prefix: "/api" });
+  app.register(wishlistRoutes, { prefix: "/api" });
   app.register(userRoutes, { prefix: "/api/users" });
   app.register(adminRoutes, { prefix: "/api/admin" });
   if (env.NODE_ENV !== "production") {

@@ -3,7 +3,6 @@ dist/
 *.log
 *.tsbuildinfo
 
-# Keep environment variables out of version control
 .env
 .env.*
 .env.example
